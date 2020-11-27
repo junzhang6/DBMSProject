@@ -120,6 +120,15 @@ ui <- navbarPage(title="DBMS Project", id="navbar",
                                 tabPanel("Your Schedule",
                                          textOutput(outputId="StudentSchedule"),
                                          tableOutput(outputId="StudentScheduleTable")
+                                ),
+                                
+                                tabPanel("Drop",
+                                         numericInput(inputId="ClassDrop", label="If you want to drop any course, type in the classid here.", 
+                                                      value=FALSE),
+                                         actionButton("ClassDropConfirm", label="Submit"),
+                                         conditionalPanel(condition="input.ClassDropConfirm", 
+                                                          textOutput(outputId="DropMessage"), 
+                                                          tableOutput(outputId="DropOut"))
                                 )
                                 
                           ), style='width: 900px; height: 1000px'
@@ -132,6 +141,7 @@ ui <- navbarPage(title="DBMS Project", id="navbar",
 
 server <- function(input, output) {
       
+      ######################################################################
       # First Tab
       output$CourseTable <- renderDataTable({
             datatable(dbGetQuery(dbcon, "SELECT * FROM Course"), options=list(lengthMenu=c(10, 20, 30), pageLength=10))
@@ -143,7 +153,7 @@ server <- function(input, output) {
             datatable(dbGetQuery(dbcon, "SELECT * FROM Class"), options=list(lengthMenu=c(10, 20, 30), pageLength=10))
       })
       
-      
+      ######################################################################
       # Second Tab 
       output$WelcomeText <- renderText({ 
             # Invalid input
@@ -185,9 +195,8 @@ server <- function(input, output) {
             data.frame(StudentCreated())
       })
       
-      
+      ######################################################################
       # Third Tab
-      
       # Open TAB
       output$HelloStudent <- renderUI({
             allsid <- dbGetQuery(dbcon, "SELECT sid FROM Student")
@@ -241,15 +250,7 @@ server <- function(input, output) {
             }
       })
       
-      
-      
-      # Drop TAB (Leave it for now!)
-      # output$DropMessage <- renderText({
-      #       if(input$Confirm){
-      #             print(paste0("Hi, ", input$StudentName, ". Are you sure you want to drop this class?"))
-      #       }
-      # })
-      
+   
       # Schedule TAB
       output$StudentSchedule <- renderText({
             print("Here is your schedule next term.")
@@ -261,19 +262,32 @@ server <- function(input, output) {
             output$StudentScheduleTable <- renderTable(tempMerge)
       })
       
-      
-      
+      # Drop TAB
+      observeEvent(input$ClassDropConfirm, {
+            tempRegTable <- dbGetQuery(dbcon, "SELECT classid FROM Register")
+            tempMerge <- merge(tempTable, tempRegTable, by="classid")
+            tempMerge <- tempMerge %>% select(-c(seats, available))
+            
+            if((input$ClassDrop %in% tempMerge$classid)==T){
+                  output$DropMessage <- renderText("Here is your new schedule.")
+                  output$DropOut <- renderTable(filter(tempMerge, classid != input$ClassDrop))
+            }
+            
+      })
+
+      ######################################################################
       # Quit
       observe({
             if(input$navbar == "stop"){
                   # Remove any new insertion at the end
                   dbSendQuery(dbcon, "DELETE FROM Student WHERE sid > 23")
+                  dbRemoveTable(dbcon, "Register")
                   stopApp()
             }
       })
 }
 
-dbRemoveTable(dbcon, "Register")
+# dbRemoveTable(dbcon, "Register")
 # dbDisconnect(dbcon)
 
 # Run the application 
