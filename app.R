@@ -23,8 +23,11 @@ ui <- navbarPage(title="DBMS Project", id="navbar",
                                 p(strong(h4("The idea of this application is to simulate the actual student registration system using DBMS, and 
                                 the data in our database are self-simulated.", 
                                             align="center"))),
-                                h3("To close this application, you MUST click the QUIT tab panel. (Otherwise system might CRASH!)"), align="center"
-                          ), style='width: 1200px'
+                                h3("To close this application, you MUST click the QUIT tab panel. (Otherwise the system might CRASH!)"), align="center",
+                                p("You can find the codes for this application using the following link."), 
+                                HTML('<p> <a href="https://github.com/junzhang6/DBMSProject" 
+                                      target="_blank">Link</a><br/> </p>')
+                          ), style='width: 1300px'
                           
                  ),
                  
@@ -257,7 +260,7 @@ server <- function(input, output) {
             tempMerge <- tempMerge %>% select(-c(seats, available))
             output$StudentScheduleTable <- renderTable(tempMerge)
       })
-
+      
       
       
       # Quit
@@ -265,12 +268,12 @@ server <- function(input, output) {
             if(input$navbar == "stop"){
                   # Remove any new insertion at the end
                   dbSendQuery(dbcon, "DELETE FROM Student WHERE sid > 23")
-                  dbRemoveTable(dbcon, "Register")
                   stopApp()
             }
       })
 }
 
+dbRemoveTable(dbcon, "Register")
 # dbDisconnect(dbcon)
 
 # Run the application 
