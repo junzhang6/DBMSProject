@@ -1,0 +1,1 @@
+This is an interactive Rshiny application that simulates a student registration system using database management system, you can click this [Link](https://junzhang6.shinyapps.io/DBMS_Project/) to access the application.
